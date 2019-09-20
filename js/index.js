@@ -5,30 +5,61 @@ let firstPageRender = (function () {
         firstPage = document.querySelector('.firstPage'),
         runImg = progressBox.querySelector('img'),
         btnBox = document.querySelector('.btnBox'),
-        jumpImg = btnBox.querySelector('img');
+        jumpImg = btnBox.querySelector('img'),
+        progressWidth = parseFloat(getComputedStyle(progress, null)['width']),
+        imgLeft = parseFloat(getComputedStyle(runImg, null)['left']);
 
     //loading动画加载
     let loadingMove = function () {
         let autoTimer = null,
             progressBoxWidth = parseFloat(getComputedStyle(progressBox, null)['width']);
         firstPage.style.display = 'block';
-        autoTimer = setInterval(() => {
-            let progressWidth = parseFloat(getComputedStyle(progress, null)['width']),
-                imgLeft = parseFloat(getComputedStyle(runImg, null)['left']);
-            progress.style.width = progressWidth + 2 + 'px';
-            runImg.style.left = imgLeft + 2 + 'px';
-            //判断进度条是否到底部，接着清除定时器，清楚当前页面
-            if (progressWidth >= progressBoxWidth) {
-                progress.style.width = progressBoxWidth + 'px';
-                clearInterval(autoTimer);
-                btnBox.style.display = 'block';
-                //点击图片进入下一页
-                jumpImg.addEventListener('click', () => {
-                    clearAll();
-                    secondPageRender.init();
-                });
-            }
-        }, 17)
+
+        //动画加载
+        let imgLoad = function () {
+            //图片懒加载
+            let arr = ['img/banner-1.jpg', 'img/banner-2.jpg', 'img/banner-3.jpg', 'img/move-1.jpg', 'img/move-2.jpg',
+                    'img/move-3.jpg', 'img/move-4.jpg', 'img/move-5.jpg', 'img/move-6.jpg', 'img/move-7.jpg', 'img/move-8.jpg',
+                    'img/move-9.jpg', 'img/move-10.jpg', 'img/move-11.jpg', 'img/move-12.jpg', 'img/move-13.jpg', 'img/move-14.jpg',
+                    'img/move-15.jpg', 'img/list-1.jpg', 'img/list-2.jpg', 'img/list-3.jpg', 'img/list-5.jpg', 'img/list-6.jpg',
+                    'img/login-bg.jpg',],
+                numb = 0,
+                len = arr.length;
+            arr.forEach((item, index) => {
+                let img = new Image();
+                img.onload = () => {
+                    numb++;
+                    progress.style.width = numb / len * 100 + '%';
+                    runImg.style.left = numb / len * 100 + '%';
+                    img = null;
+                    if (numb === len) {
+                        clearTimeout(autoTimer);
+                        btnBox.style.display = 'block';
+                        //点击图片进入下一页
+                        jumpImg.addEventListener('click', () => {
+                            clearAll();
+                            secondPageRender.init();
+                        });
+                    }
+                };
+                img.src = item;
+            });
+
+            //设置最大等待时间
+            let maxDelay = function maxDelay() {
+                autoTimer = setTimeout(() => {
+                    if (numb / len >= 0.9) {
+                        progress.style.width = numb / len * 100 + '%';
+                        runImg.style.left = numb / len * 100 + '%';
+                        return;
+                    }
+                    alert('当前网络状况不佳，请稍后再试');
+                }, 10000)
+            };
+            maxDelay();
+        };
+
+        imgLoad();
     };
 
     //wind气泡
@@ -136,7 +167,9 @@ let secondPageRender = (function () {
                     return;
                 }
                 // imgList = wrapper.querySelectorAll('img');//重新获取一遍img 因为queryselector不是映射的
-                let height = parseFloat(getComputedStyle(imgList[index + 1], null)['height']);
+                let height = getComputedStyle(imgList[index + 1], null)['height'],
+                    n = height.indexOf('p');
+                height = Math.round(height.substr(0, n)) + 2;
                 wrapper.style.top = -height * (index + 1) + 'px';//计算wrapper需要移动的top值
                 index++;
             };
