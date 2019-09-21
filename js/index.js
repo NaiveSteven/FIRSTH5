@@ -6,7 +6,6 @@ let firstPageRender = (function () {
         runImg = progressBox.querySelector('img'),
         btnBox = document.querySelector('.btnBox'),
         jumpImg = btnBox.querySelector('img'),
-        progressWidth = parseFloat(getComputedStyle(progress, null)['width']),
         imgLeft = parseFloat(getComputedStyle(runImg, null)['left']);
 
     //loading动画加载
@@ -30,7 +29,8 @@ let firstPageRender = (function () {
                 img.onload = () => {
                     numb++;
                     progress.style.width = numb / len * 100 + '%';
-                    runImg.style.left = numb / len * 100 + '%';
+                    let progressWidth = parseFloat(getComputedStyle(progress, null)['width']);
+                    runImg.style.left = progressWidth + imgLeft + 'px';
                     img = null;
                     if (numb === len) {
                         clearTimeout(autoTimer);
