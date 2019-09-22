@@ -8,17 +8,21 @@ html {
 body, html {
   position: relative;
   height: 100%;
-  overflow: hidden;
   background: #F4F4F4;
-  z-index: -5;
 }
 
+.appear{
+  animation: appear .8s;
+}
+
+//.disappear{
+//  transform: translateX(100%);
+//}
 .mainBox {
   width: 100%;
   height: 100%;
   margin: 0 auto;
   max-width: 640px;
-  z-index: -4;
 }
 
 .firstPage, .secondPage, .thirdPage {
@@ -26,7 +30,6 @@ body, html {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
 }
 
 .firstPage {
@@ -163,12 +166,21 @@ body, html {
 .secondPage {
   //display: block;
 
+  //滚动条向下滑动，后部导航栏出现在最上方
+  .fix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    animation: opacityMove .5s both;
+    z-index: 3;
+  }
+
+
   header {
     width: 100%;
     height: 1rem;
     background: rgba(255, 0, 0, .5);
     overflow: hidden;
-
 
     .menu {
       width: .6rem;
@@ -439,6 +451,27 @@ body, html {
     transform: rotate(360deg);
   }
 }
+
+@keyframes opacityMove {
+  0% {
+    opacity: 0;
+    background: none
+  }
+  100% {
+    opacity: 1;
+    background: pink;
+  }
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 
 
 

@@ -4,9 +4,7 @@ let firstPageRender = (function () {
         progress = progressBox.querySelector('.progress'),
         firstPage = document.querySelector('.firstPage'),
         runImg = progressBox.querySelector('img'),
-        btnBox = document.querySelector('.btnBox'),
-        jumpImg = btnBox.querySelector('img'),
-        imgLeft = parseFloat(getComputedStyle(runImg, null)['left']);
+        btnBox = document.querySelector('.btnBox');
 
     //loading动画加载
     let loadingMove = function () {
@@ -16,47 +14,68 @@ let firstPageRender = (function () {
 
         //动画加载
         let imgLoad = function () {
+            let imgLeft = parseFloat(getComputedStyle(runImg, null)['left']),
+                progressBoxWidth = parseFloat(getComputedStyle(progressBox, null)['width']);
+            autoTimer = setInterval(() => {
+                let jumpImg = btnBox.querySelector('img'),
+                    progressWidth = parseFloat(getComputedStyle(progress, null)['width']);
+                progress.style.width = progressWidth + 2 + 'px';
+                runImg.style.left = progressWidth + 2 + imgLeft + 'px';
+
+                //到达底部清楚定时器让下面的wind和跳动的动物出现
+                if (progressWidth >= progressBoxWidth) {
+                    progress.style.width = progressBoxWidth + 'px';
+                    runImg.style.left = progressBoxWidth + imgLeft + 'px';
+                    btnBox.style.display = 'block';
+                    clearInterval(autoTimer);
+                    jumpImg.addEventListener('click', () => {
+                        clearAll();
+                        secondPageRender.init();
+                    });
+                }
+
+            }, 17);
             //图片懒加载
-            let arr = ['img/banner-1.jpg', 'img/banner-2.jpg', 'img/banner-3.jpg', 'img/move-1.jpg', 'img/move-2.jpg',
-                    'img/move-3.jpg', 'img/move-4.jpg', 'img/move-5.jpg', 'img/move-6.jpg', 'img/move-7.jpg', 'img/move-8.jpg',
-                    'img/move-9.jpg', 'img/move-10.jpg', 'img/move-11.jpg', 'img/move-12.jpg', 'img/move-13.jpg', 'img/move-14.jpg',
-                    'img/move-15.jpg', 'img/list-1.jpg', 'img/list-2.jpg', 'img/list-3.jpg', 'img/list-5.jpg', 'img/list-6.jpg',
-                    'img/login-bg.jpg',],
-                numb = 0,
-                len = arr.length;
-            arr.forEach((item, index) => {
-                let img = new Image();
-                img.onload = () => {
-                    numb++;
-                    progress.style.width = numb / len * 100 + '%';
-                    let progressWidth = parseFloat(getComputedStyle(progress, null)['width']);
-                    runImg.style.left = progressWidth + imgLeft + 'px';
-                    img = null;
-                    if (numb === len) {
-                        clearTimeout(autoTimer);
-                        btnBox.style.display = 'block';
-                        //点击图片进入下一页
-                        jumpImg.addEventListener('click', () => {
-                            clearAll();
-                            secondPageRender.init();
-                        });
-                    }
-                };
-                img.src = item;
-            });
+            // let arr = ['img/banner-1.jpg', 'img/banner-2.jpg', 'img/banner-3.jpg', 'img/move-1.jpg', 'img/move-2.jpg',
+            //         'img/move-3.jpg', 'img/move-4.jpg', 'img/move-5.jpg', 'img/move-6.jpg', 'img/move-7.jpg', 'img/move-8.jpg',
+            //         'img/move-9.jpg', 'img/move-10.jpg', 'img/move-11.jpg', 'img/move-12.jpg', 'img/move-13.jpg', 'img/move-14.jpg',
+            //         'img/move-15.jpg', 'img/list-1.jpg', 'img/list-2.jpg', 'img/list-3.jpg', 'img/list-5.jpg', 'img/list-6.jpg',
+            //         'img/login-bg.jpg',],
+            //     numb = 0,
+            //     len = arr.length;
+            // arr.forEach((item, index) => {
+            //     let img = new Image();
+            //     img.onload = () => {
+            //         numb++;
+            //         progress.style.width = numb / len * 100 + '%';
+            //         let progressWidth = parseFloat(getComputedStyle(progress, null)['width']);
+            //         runImg.style.left = progressWidth + imgLeft + 'px';
+            //         img = null;
+            //         if (numb === len) {
+            //             clearTimeout(autoTimer);
+            //             btnBox.style.display = 'block';
+            //             //点击图片进入下一页
+            //             jumpImg.addEventListener('click', () => {
+            //                 clearAll();
+            //                 secondPageRender.init();
+            //             });
+            //         }
+            //     };
+            //     img.src = item;
+            // });
 
             //设置最大等待时间
-            let maxDelay = function maxDelay() {
-                autoTimer = setTimeout(() => {
-                    if (numb / len >= 0.9) {
-                        progress.style.width = numb / len * 100 + '%';
-                        runImg.style.left = numb / len * 100 + '%';
-                        return;
-                    }
-                    alert('当前网络状况不佳，请稍后再试');
-                }, 10000)
-            };
-            maxDelay();
+            // let maxDelay = function maxDelay() {
+            //     autoTimer = setTimeout(() => {
+            //         if (numb / len >= 0.9) {
+            //             progress.style.width = numb / len * 100 + '%';
+            //             runImg.style.left = numb / len * 100 + '%';
+            //             return;
+            //         }
+            //         alert('当前网络状况不佳，请稍后再试');
+            //     }, 10000)
+            // };
+            // maxDelay();
         };
 
         imgLoad();
@@ -243,6 +262,8 @@ let secondPageRender = (function () {
 
     //列表区域数据获取成功后，绑定数据，绑定数据成功后，绑定点击事件
     let bindHtml = function () {
+        let curPage = 1,
+            isLoad = true;
 
         //获取list.json文件中的数据
         let bindData = function () {
@@ -266,13 +287,18 @@ let secondPageRender = (function () {
             let containerBox = document.querySelector('.containerBox'),
                 str = ``;
             for (let key in result) {
-                let {img, desc} = result[key];
-                str += `<a href="javascript:;">
+                let {img, desc, page} = result[key];
+                if (curPage === page) {
+                    str += `<a href="javascript:;">
                 <img src="${img}" alt="">
                 <p>${desc}</p>
                 <i class="iconfont icon-icon-test"></i></a>`;
+                }
             }
             containerBox.innerHTML = str;
+            curPage++;
+            isLoad = false;
+
             //绑定数据成功，执行绑定点击数据的任务
         }).then(function () {
             let containerBox = document.querySelector('.containerBox'),
@@ -289,9 +315,66 @@ let secondPageRender = (function () {
                     this.className = 'iconfont icon-aixin';
                 });
             });
+        }).then(() => {
+            window.addEventListener('scroll', () => {
+                let scrollTop = document.documentElement.scrollTop || document.body.scrollTop,//被卷曲的高度
+                    curHeight = document.documentElement.clientHeight || document.body.clientHeight,//当前窗口的高度
+                    allTop = document.documentElement.scrollHeight || document.body.scrollHeight;//页面的总高度
+                // （包括滚动条）
+
+                //被卷曲的高度大于窗口高度减去被卷曲的高度减去2 就执行获取数据的函数和绑定数据的函数
+                if (scrollTop >= allTop - curHeight - 2 && isLoad === false) {
+                    let pro = bindData();
+                    pro.then((result) => {
+                        let containerBox = document.querySelector('.containerBox'),
+                            str = ``;
+                        for (let key in result) {
+                            let {img, desc, page} = result[key];
+
+                            //当前页面和获取的数据的页面相等，就就将它绑定到页面中
+                            if (curPage === page) {
+                                str += `<a href="javascript:;">
+                <img src="${img}" alt="">
+                <p>${desc}</p>
+                <i class="iconfont icon-icon-test"></i></a>`;
+                            }
+                        }
+
+                        //绑定的页面跟随在最先绑定的页面的后面
+                        containerBox.innerHTML += str;
+                        curPage++;
+                        isLoad = false;
+
+                        //绑定数据成功，执行绑定点击数据的任务
+                    }).then(function () {
+                        let containerBox = document.querySelector('.containerBox'),
+                            aBox = containerBox.querySelector('a'),
+                            icon = containerBox.querySelectorAll('i');
+
+                        //爱心点击切换是否实心
+                        icon.forEach(item => {
+                            item.addEventListener('click', function () {
+                                if (this.className === 'iconfont icon-aixin') {
+                                    this.className = 'iconfont icon-icon-test';
+                                    return;
+                                }
+                                this.className = 'iconfont icon-aixin';
+                            });
+                        });
+                    });
+                    isLoad = true;
+                }
+
+                //被卷曲的高度超过头部导航栏的长度就给头部导航栏加入fix类名
+                let header = document.querySelector('header'),
+                    headerWidth = parseFloat(getComputedStyle(header, null)['height']);
+                if (scrollTop >= headerWidth) {
+                    header.className = 'fix';
+                    return;
+                }
+                header.className = '';
+            });
         });
-
-
     };
 
     //人物头像点击进入登录页面
@@ -301,6 +384,7 @@ let secondPageRender = (function () {
             thirdPage = document.querySelector('.thirdPage');
         people.addEventListener('click', () => {
             home.style.display = 'none';
+
             thirdPageRender.init();
         });
     };
