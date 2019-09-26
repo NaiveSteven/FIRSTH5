@@ -1,4 +1,5 @@
 //首页加载
+
 let firstPageRender = (function () {
     let progressBox = document.querySelector('.progressBox'),
         progress = progressBox.querySelector('.progress'),
@@ -170,6 +171,7 @@ let secondPageRender = (function () {
             autoTemp = null;
 
         //自动移动
+
         let autoMove = function () {
             //在三张图片后面再加一张和第一张相同的图片
             // let clone = imgList[0].cloneNode(true),//深度克隆 将所有的内容都克隆一份
@@ -194,6 +196,7 @@ let secondPageRender = (function () {
             };
             auto();
         };
+
 
         //小圆点自动和图片对齐 点击对齐
         let autoCircle = function () {
@@ -224,8 +227,9 @@ let secondPageRender = (function () {
             });
         };
 
-        autoTimer = setInterval(autoMove, 2000);
-        autoTemp = setInterval(autoCircle, 2000);
+        autoTimer = setInterval(autoMove, 3000);
+        autoTemp = setInterval(autoCircle, 3000);
+
     };
 
     //跑马灯
@@ -234,7 +238,8 @@ let secondPageRender = (function () {
             imgs = horseLightBox.querySelectorAll('img'),
             autoRun = null,
             fragment = document.createDocumentFragment(),
-            boxWidth = parseFloat(getComputedStyle(horseLightBox, null)['width']);
+            boxWidth = parseFloat(getComputedStyle(horseLightBox, null)['width']),
+            timer = null;
 
         //复制一份原有的放到末尾
         [].forEach.call(imgs, item => {
@@ -247,23 +252,30 @@ let secondPageRender = (function () {
 
         //跑马灯自动向左运动
         let width = parseFloat(getComputedStyle(imgs[0], null)['width']);
-        setInterval(() => {
-            //下面这行当初出bug，必须实时获取当前horseLightBox的left值，所以必须写在定时器里面
-            let leftMove = parseFloat(getComputedStyle(horseLightBox, null)['left']);
-            //当horseLightBox运动到一半的时候，让他立即回到第一个也就是left值为0
-            if (Math.abs(leftMove) >= boxWidth) {
-                horseLightBox.style.left = 0 + 'px';
-                return;
-            }
-            leftMove -= 1;
-            horseLightBox.style.left = leftMove + 'px';
-        }, 17);
+        window.onfocus = () => {
+            timer = setInterval(() => {
+                //下面这行当初出bug，必须实时获取当前horseLightBox的left值，所以必须写在定时器里面
+                let leftMove = parseFloat(getComputedStyle(horseLightBox, null)['left']);
+                //当horseLightBox运动到一半的时候，让他立即回到第一个也就是left值为0
+                if (Math.abs(leftMove) >= boxWidth) {
+                    horseLightBox.style.left = 0 + 'px';
+                    return;
+                }
+                leftMove -= 1;
+                horseLightBox.style.left = leftMove + 'px';
+            }, 17);
+        };
+        window.onblur = () => {
+            clearInterval(timer);
+        };
     };
 
     //列表区域数据获取成功后，绑定数据，绑定数据成功后，绑定点击事件
     let bindHtml = function () {
         let curPage = 1,
-            isLoad = true;
+            isLoad = false,
+            lastLen = null,//记录上一次aList也就是列表数组的长度
+            nowLen = null;//记录当前aList也就是列表数组的长度
 
         //获取list.json文件中的数据
         let bindData = function () {
@@ -289,6 +301,7 @@ let secondPageRender = (function () {
             for (let key in result) {
                 let {img, desc, page} = result[key];
                 if (curPage === page) {
+                    lastLen++;//第一页的a标签有多少个，lastLen就是多少，也就是最初的显示出来的列表的长度
                     str += `<a href="javascript:;">
                 <img src="${img}" alt="">
                 <p>${desc}</p>
@@ -298,83 +311,178 @@ let secondPageRender = (function () {
             containerBox.innerHTML = str;
             curPage++;
             isLoad = false;
+            return result;
 
-            //绑定数据成功，执行绑定点击数据的任务
-        }).then(function () {
-            let containerBox = document.querySelector('.containerBox'),
-                aBox = containerBox.querySelector('a'),
-                icon = containerBox.querySelectorAll('i');
+            //给每个列表框绑定点击事件
+        })
+            .then(result => {
+                let secondPage = document.querySelector('.secondPage'),
+                    containerBox = secondPage.querySelector('.containerBox'),
+                    aList = containerBox.querySelectorAll('p'),
+                    forthPage = document.querySelector('.forthPage'),
+                    midContent = forthPage.querySelector('.midContent'),
+                    stri = ``;
+                aList = [].slice.call(aList, 0).slice(0, lastLen);
 
-            //爱心点击切换是否实心
-            icon.forEach(item => {
-                item.addEventListener('click', function () {
-                    if (this.className === 'iconfont icon-aixin') {
-                        this.className = 'iconfont icon-icon-test';
-                        return;
-                    }
-                    this.className = 'iconfont icon-aixin';
-                });
-            });
-        }).then(() => {
-            window.addEventListener('scroll', () => {
-                let scrollTop = document.documentElement.scrollTop || document.body.scrollTop,//被卷曲的高度
-                    curHeight = document.documentElement.clientHeight || document.body.clientHeight,//当前窗口的高度
-                    allTop = document.documentElement.scrollHeight || document.body.scrollHeight;//页面的总高度
-                // （包括滚动条）
-
-                //被卷曲的高度大于窗口高度减去被卷曲的高度减去2 就执行获取数据的函数和绑定数据的函数
-                if (scrollTop >= allTop - curHeight - 2 && isLoad === false) {
-                    let pro = bindData();
-                    pro.then((result) => {
-                        let containerBox = document.querySelector('.containerBox'),
-                            str = ``;
+                aList.forEach((item, index) => {
+                    item.onclick = () => {
                         for (let key in result) {
-                            let {img, desc, page} = result[key];
-
-                            //当前页面和获取的数据的页面相等，就就将它绑定到页面中
-                            if (curPage === page) {
-                                str += `<a href="javascript:;">
-                <img src="${img}" alt="">
-                <p>${desc}</p>
-                <i class="iconfont icon-icon-test"></i></a>`;
+                            let {paragraph, id, date, title} = result[key];
+                            if (index === id - 1) {
+                                stri = `<div class="top">
+                                <p class="title">${title}</p>
+                                <span>${date}</span>
+                                </div><p class="paragraph">${paragraph}</p>>`;
+                                midContent.innerHTML = stri;
                             }
                         }
+                        secondPage.style.display = 'none';
+                        forthPageRender.init();
+                    }
+                })
 
-                        //绑定的页面跟随在最先绑定的页面的后面
-                        containerBox.innerHTML += str;
-                        curPage++;
-                        isLoad = false;
 
-                        //绑定数据成功，执行绑定点击数据的任务
-                    }).then(function () {
-                        let containerBox = document.querySelector('.containerBox'),
-                            aBox = containerBox.querySelector('a'),
-                            icon = containerBox.querySelectorAll('i');
+                //绑定数据成功，执行绑定点击数据的任务
+            })
+            .then(function () {
+                let containerBox = document.querySelector('.containerBox'),
+                    aBox = containerBox.querySelector('p'),
+                    icon = containerBox.querySelectorAll('i');
 
-                        //爱心点击切换是否实心
-                        icon.forEach(item => {
-                            item.addEventListener('click', function () {
-                                if (this.className === 'iconfont icon-aixin') {
-                                    this.className = 'iconfont icon-icon-test';
-                                    return;
-                                }
-                                this.className = 'iconfont icon-aixin';
-                            });
-                        });
+                //爱心点击切换是否实心
+                icon.forEach(item => {
+                    item.addEventListener('click', function () {
+                        if (this.className === 'iconfont icon-aixin') {
+                            this.className = 'iconfont icon-icon-test';
+                            return;
+                        }
+                        this.className = 'iconfont icon-aixin';
                     });
-                    isLoad = true;
-                }
+                });
+            })
+            .then(() => {
+                window.addEventListener('scroll', () => {
+                    let scrollTop = document.documentElement.scrollTop || document.body.scrollTop,//被卷曲的高度
+                        curHeight = document.documentElement.clientHeight || document.body.clientHeight,//当前窗口的高度
+                        allTop = document.documentElement.scrollHeight || document.body.scrollHeight;//页面的总高度
+                    // （包括滚动条）
+                    //被卷曲的高度大于窗口高度减去被卷曲的高度减去2 就执行获取数据的函数和绑定数据的函数
+                    if (scrollTop >= allTop - curHeight - 2) {
+                        if (isLoad) return;
+                        isLoad = true;
+                        let pro = bindData();
+                        pro.then((result) => {
+                            let containerB = document.querySelector('.containerBox'),
+                                str = ``;
+                            for (let key in result) {
+                                let {img, desc, page} = result[key];
 
-                //被卷曲的高度超过头部导航栏的长度就给头部导航栏加入fix类名
-                let header = document.querySelector('header'),
-                    headerWidth = parseFloat(getComputedStyle(header, null)['height']);
-                if (scrollTop >= headerWidth) {
-                    header.className = 'fix';
-                    return;
-                }
-                header.className = '';
+                                //当前页面和获取的数据的页面相等，就就将它绑定到页面中
+                                if (curPage === page) {
+                                    nowLen++;//记录最新更新的列表数组的长度
+                                    str += `<a href="javascript:;" >
+                                <img src="${img}" alt="">
+                                <p>${desc}</p>
+                                <i class="iconfont icon-icon-test"></i></a>`;
+                                }
+                            }
+
+                            //绑定的页面跟随在最先绑定的页面的后面
+                            containerB.innerHTML += str;
+                            curPage++;
+
+                            isLoad = false;
+                            return result;
+                            //绑定数据成功，执行绑定点击数据的任务
+                        })
+                            .then(function (result) {
+                                let containerBox = document.querySelector('.containerBox'),
+                                    aBox = containerBox.querySelector('p'),
+                                    icon = containerBox.querySelectorAll('i');
+
+                                //爱心点击切换是否实心
+                                icon.forEach(item => {
+                                    item.addEventListener('click', function () {
+                                        if (this.className === 'iconfont icon-aixin') {
+                                            this.className = 'iconfont icon-icon-test';
+                                            return;
+                                        }
+                                        this.className = 'iconfont icon-aixin';
+                                    });
+                                });
+                                return result;
+                            })
+                            .then(result => {
+                                let secondPage = document.querySelector('.secondPage'),
+                                    containerBox = secondPage.querySelector('.containerBox'),
+                                    aList = containerBox.querySelectorAll('p'),
+                                    forthPage = document.querySelector('.forthPage'),
+                                    midContent = forthPage.querySelector('.midContent'),
+                                    stri = ``,
+                                    as = containerBox.querySelectorAll('p');
+
+                                aList = [].slice.call(aList, 5);//截取当前更新的一段alist列表数组
+
+                                as = [].slice.call(as, 0).slice(0, lastLen);
+
+                                as.forEach((item, index) => {
+                                    item.onclick = () => {
+                                        for (let key in result) {
+                                            let {paragraph, id, date, title} = result[key];
+                                            if (index === id - 1) {
+                                                stri = `<div class="top">
+                                <p class="title">${title}</p>
+                                <span>${date}</span>
+                                </div><p class="paragraph">${paragraph}</p>>`;
+                                                midContent.innerHTML = stri;
+                                            }
+                                        }
+                                        secondPage.style.display = 'none';
+                                        forthPageRender.init();
+                                    }
+                                });
+
+                                aList.forEach((item, index) => {
+                                    item.onclick = () => {
+                                        for (let key in result) {
+                                            if (!result.hasOwnProperty(key)) {
+                                                continue;
+                                            }
+                                            let {paragraph, id, date, title} = result[key];
+                                            if (index === id - 5 - 1) {
+                                                stri += `<div class="top">
+                                                <p class="title">${title}</p>
+                                                <span>${date}</span>
+                                                </div><p class="paragraph">${paragraph}</p>>`;
+                                                midContent.innerHTML = stri;
+                                            }
+                                        }
+                                        secondPage.style.display = 'none';
+                                        forthPageRender.init();
+                                    }
+                                });
+
+                                isLoad = false;
+                                //绑定数据成功，执行绑定点击数据的任务
+                            });
+                    }
+
+                    //被卷曲的高度超过头部导航栏的长度就给头部导航栏加入fix类名
+                    let header = document.querySelector('header'),
+                        headerWidth = parseFloat(getComputedStyle(header, null)['height']);
+                    if (scrollTop >= headerWidth) {
+                        header.className = 'fix';
+                        return;
+                    }
+                    header.className = '';
+                });
+            })
+            .then(() => {
+                let containerBox = document.querySelector('.containerBox');
+                containerBox.addEventListener('click', ev => {
+                    localStorage.setItem("moveTop", ev.pageY);
+                });
             });
-        });
     };
 
     //人物头像点击进入登录页面
@@ -390,6 +498,7 @@ let secondPageRender = (function () {
     };
 
     return {
+        bindHtml,
         init: function () {
             block();
             musicClick();
@@ -419,6 +528,7 @@ let thirdPageRender = (function () {
         returnBtn.addEventListener('click', () => {
             third.style.display = 'none';
             second.style.display = 'block';
+
         });
     };
 
@@ -426,6 +536,245 @@ let thirdPageRender = (function () {
         init: function () {
             appear();
             back();
+        }
+    }
+})();
+
+//日记页加载
+let forthPageRender = (function () {
+    let forthPage = document.querySelector('.forthPage'),
+        topBox = forthPage.querySelector('.topBox'),
+        retBtn = topBox.querySelector('i'),
+        second = document.querySelector('.secondPage');
+
+    //函数执行就将日记模块显示
+    let dateBlock = () => {
+        forthPage.style.display = 'block';
+    };
+    //点击返回第二页
+    let retSecond = function () {
+        retBtn.addEventListener('click', () => {
+            let numb = 0;
+            forthPage.style.display = 'none';
+            second.style.display = 'block';
+            let bindHtml = function () {
+                let curPage = 1,
+                    isLoad = false,
+                    lastLen = null,//记录上一次aList也就是列表数组的长度
+                    nowLen = null;//记录当前aList也就是列表数组的长度
+                numb++;
+                //获取list.json文件中的数据
+                let bindData = function () {
+                    return new Promise(resolve => {
+                        let xhr = new XMLHttpRequest,
+                            data = null;
+                        xhr.open('GET', 'json/list.json');
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === 4) {
+                                data = JSON.parse(xhr.responseText);
+                                resolve(data);
+                            }
+                        };
+                        xhr.send(null);
+                    });
+                };
+
+                //获取数据成功之后绑定数据，绑定数据成功之后，给爱心绑定点击事件
+                let promise = bindData();
+                promise.then((result) => {
+                    let containerBox = document.querySelector('.containerBox'),
+                        str = ``;
+                    for (let key in result) {
+                        let {img, desc, page} = result[key];
+                        if (curPage === page) {
+                            lastLen++;//第一页的a标签有多少个，lastLen就是多少，也就是最初的显示出来的列表的长度
+                            str += `<a href="javascript:;">
+                <img src="${img}" alt="">
+                <p>${desc}</p>
+                <i class="iconfont icon-icon-test"></i></a>`;
+                        }
+                    }
+                    containerBox.innerHTML = str;
+                    curPage++;
+                    return result;
+
+                    //给每个列表框绑定点击事件
+                })
+                    .then(result => {
+                        let secondPage = document.querySelector('.secondPage'),
+                            containerBox = secondPage.querySelector('.containerBox'),
+                            aList = containerBox.querySelectorAll('p'),
+                            forthPage = document.querySelector('.forthPage'),
+                            midContent = forthPage.querySelector('.midContent'),
+                            stri = ``;
+                        aList = [].slice.call(aList, 0).slice(0, lastLen);
+
+                        aList.forEach((item, index) => {
+                            item.onclick = () => {
+                                for (let key in result) {
+                                    let {paragraph, id, date, title} = result[key];
+                                    if (index === id - 1) {
+                                        stri = `<div class="top">
+                                <p class="title">${title}</p>
+                                <span>${date}</span>
+                                </div><p class="paragraph">${paragraph}</p>>`;
+                                        midContent.innerHTML = stri;
+                                    }
+                                }
+                                secondPage.style.display = 'none';
+                                forthPageRender.init();
+                            }
+                        })
+
+
+                        //绑定数据成功，执行绑定点击数据的任务
+                    })
+                    .then(function () {
+                        let containerBox = document.querySelector('.containerBox'),
+                            aBox = containerBox.querySelector('p'),
+                            icon = containerBox.querySelectorAll('i');
+
+                        //爱心点击切换是否实心
+                        icon.forEach(item => {
+                            item.addEventListener('click', function () {
+                                if (this.className === 'iconfont icon-aixin') {
+                                    this.className = 'iconfont icon-icon-test';
+                                    return;
+                                }
+                                this.className = 'iconfont icon-aixin';
+                            });
+                        });
+                    })
+                    .then(() => {
+                        window.addEventListener('scroll', () => {
+                            let scrollTop = document.documentElement.scrollTop || document.body.scrollTop,//被卷曲的高度
+                                curHeight = document.documentElement.clientHeight || document.body.clientHeight,//当前窗口的高度
+                                allTop = document.documentElement.scrollHeight || document.body.scrollHeight;//页面的总高度
+                            // （包括滚动条）
+                            //被卷曲的高度大于窗口高度减去被卷曲的高度减去2 就执行获取数据的函数和绑定数据的函数
+                            if (scrollTop >= allTop - curHeight - 2) {
+                                let pro = bindData();
+                                pro.then((result) => {
+                                    let containerB = document.querySelector('.containerBox'),
+                                        aAll = containerB.querySelectorAll('p');
+                                    str = ``;
+                                    for (let key in result) {
+                                        if (!result.hasOwnProperty(key)) {
+                                            continue;
+                                        }
+                                        let {img, desc, page} = result[key];
+
+                                        //当前页面和获取的数据的页面相等，就就将它绑定到页面中
+                                        if (curPage === page) {
+                                            if (aAll.length === result.length) break;
+                                            nowLen++;//记录最新更新的列表数组的长度
+                                            str += `<a href="javascript:;">
+                                <img src="${img}" alt="">
+                                <p>${desc}</p>
+                                <i class="iconfont icon-icon-test"></i></a>`;
+                                        }
+                                    }
+
+                                    //绑定的页面跟随在最先绑定的页面的后面
+                                    containerB.innerHTML += str;
+                                    curPage++;
+
+                                    return result;
+                                    //绑定数据成功，执行绑定点击数据的任务
+                                })
+                                    .then(function (result) {
+                                        let containerBox = document.querySelector('.containerBox'),
+                                            aBox = containerBox.querySelector('p'),
+                                            icon = containerBox.querySelectorAll('i');
+
+                                        //爱心点击切换是否实心
+                                        icon.forEach(item => {
+                                            item.addEventListener('click', function () {
+                                                if (this.className === 'iconfont icon-aixin') {
+                                                    this.className = 'iconfont icon-icon-test';
+                                                    return;
+                                                }
+                                                this.className = 'iconfont icon-aixin';
+                                            });
+                                        });
+                                        return result;
+                                    })
+                                    .then(result => {
+                                        let secondPage = document.querySelector('.secondPage'),
+                                            containerBox = secondPage.querySelector('.containerBox'),
+                                            aList = containerBox.querySelectorAll('p'),
+                                            forthPage = document.querySelector('.forthPage'),
+                                            midContent = forthPage.querySelector('.midContent'),
+                                            stri = ``,
+                                            as = containerBox.querySelectorAll('a');
+                                        aList = [].slice.call(aList, 5);//截取当前更新的一段alist列表数组
+
+                                        as = [].slice.call(as, 0).slice(0, lastLen);
+
+                                        as.forEach((item, index) => {
+                                            item.onclick = () => {
+                                                for (let key in result) {
+                                                    if (!result.hasOwnProperty(key)) {
+                                                        continue;
+                                                    }
+                                                    let {paragraph, id, date, title} = result[key];
+                                                    if (index === id - 1) {
+                                                        stri = `<div class="top">
+                                <p class="title">${title}</p>
+                                <span>${date}</span>
+                                </div><p class="paragraph">${paragraph}</p>>`;
+                                                        midContent.innerHTML = stri;
+                                                    }
+                                                }
+                                                secondPage.style.display = 'none';
+                                                forthPageRender.init();
+                                            }
+                                        });
+
+                                        aList.forEach((item, index) => {
+                                            item.onclick = () => {
+                                                for (let key in result) {
+                                                    if (!result.hasOwnProperty(key)) {
+                                                        continue;
+                                                    }
+                                                    let {paragraph, id, date, title} = result[key];
+                                                    if (index === id - 5 - 1) {
+                                                        stri += `<div class="top">
+                                                <p class="title">${title}</p>
+                                                <span>${date}</span>
+                                                </div><p class="paragraph">${paragraph}</p>>`;
+                                                        midContent.innerHTML = stri;
+                                                    }
+                                                }
+                                                secondPage.style.display = 'none';
+                                                forthPageRender.init();
+                                            }
+                                        });
+
+
+                                        //绑定数据成功，执行绑定点击数据的任务
+                                    });
+                            }
+
+                            //被卷曲的高度超过头部导航栏的长度就给头部导航栏加入fix类名
+                            let header = document.querySelector('header'),
+                                headerWidth = parseFloat(getComputedStyle(header, null)['height']);
+                            if (scrollTop >= headerWidth) {
+                                header.className = 'fix';
+                                return;
+                            }
+                            header.className = '';
+                        });
+                    });
+            };
+            bindHtml();
+        });
+    };
+
+    return {
+        init: function () {
+            dateBlock();
+            retSecond();
         }
     }
 })();
@@ -445,8 +794,10 @@ let thirdPageRender = (function () {
         case 'login':
             thirdPageRender.init();
             break;
+        case 'date':
+            forthPageRender.init();
+            break;
         default:
             firstPageRender.init();
     }
 })();
-

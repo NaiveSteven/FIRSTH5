@@ -11,7 +11,7 @@ body, html {
   background: #F4F4F4;
 }
 
-.appear{
+.appear {
   animation: appear .8s;
 }
 
@@ -25,15 +25,15 @@ body, html {
   max-width: 640px;
 }
 
-.firstPage, .secondPage, .thirdPage {
+.firstPage, .secondPage, .thirdPage .forthPage {
   display: none;
-  position: relative;
   width: 100%;
-  height: 100%;
 }
 
 .firstPage {
-  background: url("../img/bg2.jpg") no-repeat;
+  width: 100%;
+  height: 100%;
+  background: url("../img/login-bg.jpg") repeat-x;
   background-size: 100% 100%;
 
   .color {
@@ -164,6 +164,9 @@ body, html {
 }
 
 .secondPage {
+  position: absolute;
+  left: 0;
+  top: 0;
   //display: block;
 
   //滚动条向下滑动，后部导航栏出现在最上方
@@ -323,7 +326,7 @@ body, html {
     .icon-xiangxiajiantou {
       font-size: .35rem;
       color: white;
-      line-height: .4rem;
+      line-height: .5rem;
     }
   }
 
@@ -364,7 +367,7 @@ body, html {
 
       .icon-icon-test {
         float: right;
-        margin-top: .8rem;
+        margin-top: .9rem;
         margin-right: .1rem;
         font-size: .3rem;
         color: black;
@@ -373,7 +376,7 @@ body, html {
 
       .icon-aixin {
         float: right;
-        margin-top: .8rem;
+        margin-top: .9rem;
         margin-right: .1rem;
         font-size: .3rem;
         color: red;
@@ -392,9 +395,11 @@ body, html {
 }
 
 .thirdPage {
+  display: none;
+  width: 100%;
+  height: 100%;
   background: url("../img/login-bg.jpg") no-repeat;
   background-size: 100% 100%;
-
 
   .icon-changyongtubiao-mianxing- {
     position: absolute;
@@ -413,7 +418,6 @@ body, html {
     height: 100%;
     background: black;
     opacity: .5;
-
   }
 
   .loginBox {
@@ -439,6 +443,65 @@ body, html {
 
     .iconfont {
       margin-left: -.5rem;
+    }
+  }
+}
+
+.forthPage {
+  display: none;
+
+  .topBox {
+    position: relative;
+    width: 100%;
+    height: 1rem;
+    background: rgba(255, 0, 0, .5);
+    overflow: hidden;
+
+    .icon-changyongtubiao-mianxing- {
+      float: left;
+      font-size: .8rem;
+      color: white;
+      line-height: 1rem;
+    }
+
+    p {
+      display: inline-block;
+      position: absolute;
+      left: 50%;
+      margin-left: -.5rem;
+      font-size: .5rem;
+      color: white;
+      line-height: 1rem;
+    }
+  }
+
+  .midContent {
+    width: 100%;
+    background: #F4F4F4;
+
+    .top {
+      width: 100%;
+      height: .6rem;
+      margin-top: .1rem;
+
+      p {
+        display: inline-block;
+        position: absolute;
+        left: 50%;
+        margin-left: -.5rem;
+        font-size: .5rem;
+        line-height: .6rem;
+      }
+
+      span {
+        float: right;
+        margin-top: .32rem;
+      }
+    }
+
+    .paragraph {
+      font-size: .3rem;
+      letter-spacing: .03rem;
     }
   }
 }
